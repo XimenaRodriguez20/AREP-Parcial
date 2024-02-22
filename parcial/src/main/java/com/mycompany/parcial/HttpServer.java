@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
 
 public class HttpServer {
     public static void main(String[] args) throws IOException {
@@ -20,32 +21,38 @@ public class HttpServer {
 
         boolean bandera = true;
         Socket clientSocket = null;
+        String uristr = "";
 
-
-        try {
-            System.out.println("Listo para recibir ...");
-            clientSocket = serverSocket.accept();
-        } catch (IOException e) {
-            System.err.println("Accept failed.");
-            System.exit(1);
-        }
-        PrintWriter out = new PrintWriter(
-                clientSocket.getOutputStream(), true);
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(clientSocket.getInputStream()));
-        String inputLine, outputLine;
-        while ((inputLine = in.readLine()) != null) {
-            System.out.println("Recibí: " + inputLine);
-            if (!in.ready()) {
-                break;
+        while (bandera) {
+            try {
+                System.out.println("Listo para recibir ...");
+                clientSocket = serverSocket.accept();
+            } catch (IOException e) {
+                bandera = false;
+                System.err.println("Accept failed.");
+                System.exit(1);
             }
+
+            PrintWriter out = new PrintWriter(
+                    clientSocket.getOutputStream(), true);
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(clientSocket.getInputStream()));
+            String inputLine, outputLine;
+
+            while ((inputLine = in.readLine()) != null) {
+                System.out.println("Recibí: " + inputLine);
+
+                if (!in.ready()) {
+                    break;
+                }
+            }
+            outputLine = Response();
+            out.println(outputLine);
+            out.close();
+            in.close();
+            clientSocket.close();
+            serverSocket.close();
         }
-        outputLine  = Response();
-        out.println(outputLine);
-        out.close();
-        in.close();
-        clientSocket.close();
-        serverSocket.close();
 
 
     }
@@ -71,13 +78,13 @@ public class HttpServer {
                 + "<div id=\"getrespmsg\"></div>"
                 + "<script>\n"
                 + " function loadGetMsg() {"
-                + "let nameVar = document.getElementById(\"name\").value;"
+                + " let nameVar = document.getElementById(\"name\").value;"
                 + " const xhttp = new XMLHttpRequest();"
                 + " xhttp.onload = function() {"
                 + " document.getElementById(\"getrespmsg\").innerHTML ="
                 + " this.responseText;"
                 +"}"
-                +"xhttp.open(\"GET\", \"/hello?name=\"+ nameVar);"
+                +"xhttp.open(\"GET\", \"localhost:35000/consulta?comando=\"+ nameVar);"
                 + "xhttp.send();"
                 +"}"
                 + "</script>"
